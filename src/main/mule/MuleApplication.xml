@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="52b10487-ef50-452c-9bef-c42a524258f0" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="a8536f03-b54c-49ed-8237-5c08cef8065d" >
+		<db:my-sql-connection host="mudb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
+	</db:config>
+	<flow name="victcald01_trainingFlow_GET" doc:id="0f2e43b7-18ee-44e3-bcbc-803acb5d9823" >
+		<http:listener doc:name="Listener" doc:id="7128199a-571b-4ee4-ae21-90685700ddf8" config-ref="HTTP_Listener_config" path="/flights" allowedMethods="GET"/>
+		<db:select doc:name="Select Flights" doc:id="b64580e8-ca49-41fb-9ba5-d1150a5c8990" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT *
+FROM american]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="c1256c52-f3ab-4f76-8153-b616d2995579" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	ID: payload01.ID,
+	code: payload01.code1,
+	price: payload01.price default 0,
+	departureDate: payload01.takeOffDate as String default "",
+	origin: payload01.fromAirport default "",
+	destination: payload01.toAirport default "",
+	emptySeats: payload01.seatsAvailable default 0,
+	plane: {
+		"type": payload01.planeType default "",
+		totalSeats: payload01.totalSeats default 0
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e13a03e7-3079-4327-9bf1-989c9610e5b8" />
+	</flow>
+	<flow name="victcald01_trainingFlow_POST" doc:id="d8b56d63-f0d0-4d80-a9d9-811f1ad553b6" >
+		<http:listener doc:name="Listener" doc:id="0c847073-53f1-43bb-85d7-4028c6d37df1" config-ref="HTTP_Listener_config" path="/flights" allowedMethods="POST"/>
+		<set-payload value='{"mensage":"Vuelo añadido"}' doc:name="Set Payload" doc:id="f0f5449b-61d8-44cd-a313-882a7eded04b" />
+	</flow>
+	<flow name="victcald01_trainingFlow_GET_ID" doc:id="1a9d0e56-d9ee-49ae-8f2e-d7f05b88b30b" >
+		<http:listener doc:name="Listener" doc:id="05e1b8d9-b928-4101-ad73-74c47c355631" config-ref="HTTP_Listener_config" path="/flights/{ID}" allowedMethods="GET" />
+		<db:select doc:name="Select Flights" doc:id="7bb1d439-5c8a-4287-a477-7998a5f9ff79" config-ref="Database_Config" >
+			<db:sql ><![CDATA[SELECT *
+FROM american
+WHERE Id = :Id]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'Id': attributes.uriParams.Id}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="117c2aad-2cc3-4d09-aeb9-cb30f302984a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	ID: payload01.ID,
+	code: payload01.code1,
+	price: payload01.price default 0,
+	departureDate: payload01.takeOffDate as String default "",
+	origin: payload01.fromAirport default "",
+	destination: payload01.toAirport default "",
+	emptySeats: payload01.seatsAvailable default 0,
+	plane: {
+		"type": payload01.planeType default "",
+		totalSeats: payload01.totalSeats default 0
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c9e013f1-2c82-487b-bb01-81964f5b8c8d" />
+	</flow>
+</mule>

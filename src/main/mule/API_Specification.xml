@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd 
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+    <apikit:config name="prueba-american-flights-api-config" api="resource::d0934de7-2bda-423d-9394-530bb6faf754:prueba-american-flights-api:1.0.1:raml:zip:prueba-american-flights-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="prueba-american-flights-api-main">
+        <http:listener config-ref="HTTP_Listener_config" path="/api/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="prueba-american-flights-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="prueba-american-flights-api-console">
+        <http:listener config-ref="HTTP_Listener_config" path="/console/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body>#[payload]</http:body>
+                <http:headers>#[vars.outboundHeaders default {}]</http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="prueba-american-flights-api-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform>
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="delete:\flights\(Id):prueba-american-flights-api-config">
+		<db:delete doc:name="Delete" doc:id="1c695607-1ba6-448a-9d02-b6034bd457e6" config-ref="Database_Config">
+			<db:sql ><![CDATA[DELETE
+FROM american
+WHERE ID=:ID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'ID':attributes.uriParams.ID}]]]></db:input-parameters>
+		</db:delete>
+		<set-payload value='{"mensage":"Vuelo ELIMINADO"}' doc:name="Set Payload" doc:id="8b8a043b-514a-45f2-8148-36f93fe609d2" />
+    </flow>
+    <flow name="get:\flights:prueba-american-flights-api-config">
+		<flow-ref doc:name="Flow Reference" doc:id="cdf5f80e-8c96-4b3d-abca-b225b059b32a" name="victcald01_trainingFlow_GET"/>
+    </flow>
+    <flow name="get:\flights\(Id):prueba-american-flights-api-config">
+		<flow-ref doc:name="Flow Reference" doc:id="705da872-d7da-4228-a8e0-81341fc55d48" name="victcald01_trainingFlow_GET_ID"/>
+    </flow>
+    <flow name="post:\flights:application\json:prueba-american-flights-api-config">
+		<db:insert doc:name="Insert" doc:id="9a74f1bc-5f95-48e9-9da2-adb863a01679" >
+			<db:sql ><![CDATA[INSERT INTO american (code1,price,takeOffDate,fromAirport,toAirport,setasAvailable,planeType,totalSeats)
+VALUES (:code1,:price,:takeOffDate,:fromAirport,:toAirport,:setasAvailable,:planeType,:totalSeats)]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{
+	'code1':payload.code,
+	'price':payload.price,
+	'takeOffDate':payload.departureDate,
+	'fromAirport':payload.origin,
+	'toAirport':payload.destination,
+	'seatsAvailable':payload.emptySeats,
+	'planeType':payload.plane."type",
+	'totalSeats':payload.plane.totalSeats
+	
+	
+}]]]></db:input-parameters>
+		</db:insert>
+		<set-payload value='{"mensage":"Vuelo añadido"}' doc:name="Set Payload" doc:id="4c51f589-b1e6-46ca-9042-0d215d6d3f88" />
+    </flow>
+</mule>
