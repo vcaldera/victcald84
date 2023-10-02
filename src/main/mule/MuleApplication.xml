@@ -38,6 +38,15 @@ payload map ( payload01 , indexOfPayload01 ) -> {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
+		<ee:transform doc:name="Transform Message" doc:id="2ce47423-e208-497d-b05f-7bd233838c83" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
 		<logger level="INFO" doc:name="Logger" doc:id="e13a03e7-3079-4327-9bf1-989c9610e5b8" />
 	</flow>
 	<flow name="victcald01_trainingFlow_POST" doc:id="d8b56d63-f0d0-4d80-a9d9-811f1ad553b6" >
